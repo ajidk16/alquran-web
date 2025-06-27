@@ -1,36 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Settings, MapPin, Bell, Type, Save } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import { useQuranStore } from "@/lib/store"
+import { useState } from "react";
+import { Settings, MapPin, Bell, Type, Save } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useQuranStore } from "@/lib/store";
 
 export default function SettingsPage() {
-  const { settings, updateSettings } = useQuranStore()
-  const { toast } = useToast()
-  const [localSettings, setLocalSettings] = useState(settings)
+  const { settings, updateSettings } = useQuranStore();
+  const { toast } = useToast();
+  const [localSettings, setLocalSettings] = useState(settings);
 
   const handleSave = () => {
-    updateSettings(localSettings)
+    updateSettings(localSettings);
     toast({
       title: "Pengaturan Disimpan",
       description: "Pengaturan Anda telah berhasil disimpan",
-    })
-  }
+    });
+  };
 
   const updateLocalSettings = (key: string, value: any) => {
     setLocalSettings((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   const updateLocationSettings = (key: string, value: any) => {
     setLocalSettings((prev) => ({
@@ -39,8 +51,8 @@ export default function SettingsPage() {
         ...prev.location,
         [key]: value,
       },
-    }))
-  }
+    }));
+  };
 
   const updateNotificationSettings = (key: string, value: any) => {
     setLocalSettings((prev) => ({
@@ -49,8 +61,8 @@ export default function SettingsPage() {
         ...prev.notifications,
         [key]: value,
       },
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="space-y-8">
@@ -59,7 +71,9 @@ export default function SettingsPage() {
           <Settings className="h-8 w-8 text-primary" />
           Pengaturan
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Sesuaikan pengalaman membaca Al-Quran Anda</p>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Sesuaikan pengalaman membaca Al-Quran Anda
+        </p>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
@@ -70,7 +84,9 @@ export default function SettingsPage() {
               <MapPin className="h-5 w-5" />
               Lokasi
             </CardTitle>
-            <CardDescription>Pengaturan lokasi untuk jadwal sholat yang akurat</CardDescription>
+            <CardDescription>
+              Pengaturan lokasi untuk jadwal sholat yang akurat
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -79,7 +95,9 @@ export default function SettingsPage() {
                 <Input
                   id="city"
                   value={localSettings.location.city}
-                  onChange={(e) => updateLocationSettings("city", e.target.value)}
+                  onChange={(e) =>
+                    updateLocationSettings("city", e.target.value)
+                  }
                   placeholder="Jakarta"
                 />
               </div>
@@ -88,7 +106,9 @@ export default function SettingsPage() {
                 <Input
                   id="country"
                   value={localSettings.location.country}
-                  onChange={(e) => updateLocationSettings("country", e.target.value)}
+                  onChange={(e) =>
+                    updateLocationSettings("country", e.target.value)
+                  }
                   placeholder="Indonesia"
                 />
               </div>
@@ -97,17 +117,27 @@ export default function SettingsPage() {
               <Label htmlFor="prayer-method">Metode Perhitungan Sholat</Label>
               <Select
                 value={localSettings.prayerMethod.toString()}
-                onValueChange={(value) => updateLocalSettings("prayerMethod", Number.parseInt(value))}
+                onValueChange={(value) =>
+                  updateLocalSettings("prayerMethod", Number.parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">University of Islamic Sciences, Karachi</SelectItem>
-                  <SelectItem value="2">Islamic Society of North America</SelectItem>
+                  <SelectItem value="1">
+                    University of Islamic Sciences, Karachi
+                  </SelectItem>
+                  <SelectItem value="2">
+                    Islamic Society of North America
+                  </SelectItem>
                   <SelectItem value="3">Muslim World League</SelectItem>
-                  <SelectItem value="4">Umm Al-Qura University, Makkah</SelectItem>
-                  <SelectItem value="5">Egyptian General Authority of Survey</SelectItem>
+                  <SelectItem value="4">
+                    Umm Al-Qura University, Makkah
+                  </SelectItem>
+                  <SelectItem value="5">
+                    Egyptian General Authority of Survey
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -127,19 +157,30 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Aktifkan Notifikasi</Label>
-                <p className="text-sm text-muted-foreground">Terima pengingat waktu sholat</p>
+                <p className="text-sm text-muted-foreground">
+                  Terima pengingat waktu sholat
+                </p>
               </div>
               <Switch
                 checked={localSettings.notifications.enabled}
-                onCheckedChange={(checked) => updateNotificationSettings("enabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateNotificationSettings("enabled", checked)
+                }
               />
             </div>
             {localSettings.notifications.enabled && (
               <div className="space-y-2">
-                <Label htmlFor="notification-time">Pengingat Sebelum (menit)</Label>
+                <Label htmlFor="notification-time">
+                  Pengingat Sebelum (menit)
+                </Label>
                 <Select
                   value={localSettings.notifications.beforeMinutes.toString()}
-                  onValueChange={(value) => updateNotificationSettings("beforeMinutes", Number.parseInt(value))}
+                  onValueChange={(value) =>
+                    updateNotificationSettings(
+                      "beforeMinutes",
+                      Number.parseInt(value)
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -168,7 +209,12 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="font-size">Ukuran Font</Label>
-              <Select value={localSettings.fontSize} onValueChange={(value) => updateLocalSettings("fontSize", value)}>
+              <Select
+                value={localSettings.fontSize}
+                onValueChange={(value) =>
+                  updateLocalSettings("fontSize", value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -183,7 +229,9 @@ export default function SettingsPage() {
               <Label htmlFor="arabic-font">Font Arab</Label>
               <Select
                 value={localSettings.arabicFont}
-                onValueChange={(value) => updateLocalSettings("arabicFont", value)}
+                onValueChange={(value) =>
+                  updateLocalSettings("arabicFont", value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -197,11 +245,15 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Tampilkan Tafsir</Label>
-                <p className="text-sm text-muted-foreground">Tampilkan tafsir pada setiap ayat</p>
+                <p className="text-sm text-muted-foreground">
+                  Tampilkan tafsir pada setiap ayat
+                </p>
               </div>
               <Switch
                 checked={localSettings.showTafsir}
-                onCheckedChange={(checked) => updateLocalSettings("showTafsir", checked)}
+                onCheckedChange={(checked) =>
+                  updateLocalSettings("showTafsir", checked)
+                }
               />
             </div>
           </CardContent>
@@ -217,5 +269,5 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
