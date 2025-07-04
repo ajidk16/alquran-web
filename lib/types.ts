@@ -71,6 +71,11 @@ export interface PrayerTimes {
   jadwal: Jadwal;
 }
 
+export interface Location {
+  id: string;
+  lokasi: string;
+}
+
 export interface DailyDua {
   id: string;
   title: string;

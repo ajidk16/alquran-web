@@ -4,9 +4,13 @@ import type { BookmarkedVerse, Jadwal, PrayerTimes } from "./types";
 
 interface UserSettings {
   location: {
-    city: string;
-    country: string;
+    id?: string;
+    lokasi?: string;
+    city?: string;
+    state?: string;
+    country?: string;
   };
+  alarmSound: string;
   prayerMethod: number;
   notifications: {
     enabled: boolean;
@@ -102,9 +106,11 @@ export const useQuranStore = create<QuranStore>()(
       // Settings
       settings: {
         location: {
-          city: "Jakarta",
+          city: "",
+          state: "",
           country: "Indonesia",
         },
+        alarmSound: "adzan.mp3",
         prayerMethod: 2, // Islamic Society of North America
         notifications: {
           enabled: false,
@@ -139,6 +145,7 @@ export const useQuranStore = create<QuranStore>()(
       partialize: (state) => ({
         theme: state.theme,
         bookmarks: state.bookmarks,
+        prayerTimes: state.prayerTimes,
         settings: state.settings,
         selectedDuaCategory: state.selectedDuaCategory,
         showTafsir: state.showTafsir,

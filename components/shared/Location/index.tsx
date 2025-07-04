@@ -1,15 +1,12 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { getLocation, getPrayerTimes } from "@/lib/prayer-api";
+import { useQuranStore } from "@/lib/store";
 import { useState } from "react";
 
-interface LocationInfo {
-  city: string;
-  state: string;
-  country: string;
-}
-
-export default function LocationButton() {
-  const [location, setLocation] = useState<LocationInfo | null>(null);
+export default function LocationDirection() {
+  const { updateSettings, setPrayerTimes } = useQuranStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,15 +22,23 @@ export default function LocationButton() {
       }
       const data = await response.json();
 
-      setLocation({
-        city:
-          data.address.city ||
-          data.address.town ||
-          data.address.county ||
-          "Tidak diketahui",
-        state: data.address.state || "Tidak diketahui",
-        country: data.address.country || "Tidak diketahui",
+      const redat = await getLocation(
+        data.address.city || data.address.town || data.address.county
+      );
+
+      const times = await getPrayerTimes(redat.id);
+
+      updateSettings({
+        location: {
+          id: redat.id,
+          lokasi: redat.lokasi,
+          city: times.lokasi,
+          state: times.daerah,
+          country: data.address.country,
+        },
       });
+
+      setPrayerTimes(times);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Gagal memproses nama lokasi."
@@ -43,13 +48,9 @@ export default function LocationButton() {
     }
   };
 
-  console.log('location', location);
-  
-
   const handleGetLocation = () => {
     setLoading(true);
     setError(null);
-    setLocation(null);
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -57,7 +58,7 @@ export default function LocationButton() {
           const { latitude, longitude } = position.coords;
           fetchLocationName(latitude, longitude);
         },
-        // --- INI BAGIAN YANG DIPERBARUI ---
+
         (err) => {
           console.error("GEOLOCATION ERROR:", err); // Untuk debugging di console
           let friendlyMessage = "Terjadi kesalahan yang tidak diketahui.";
@@ -77,7 +78,6 @@ export default function LocationButton() {
               break;
           }
 
-          // Menambahkan pesan asli untuk detail tambahan
           setError(`${friendlyMessage} (Pesan asli: ${err.message})`);
           setLoading(false);
         }
@@ -89,25 +89,16 @@ export default function LocationButton() {
   };
 
   return (
-    <div>
-      <button onClick={handleGetLocation} disabled={loading}>
+    <>
+      <Button onClick={handleGetLocation} disabled={loading}>
         {loading ? "Mendeteksi..." : "Dapatkan Lokasi Saya"}
-      </button>
+      </Button>
 
       {error && (
         <p style={{ color: "red", marginTop: "1rem", maxWidth: "400px" }}>
           {error}
         </p>
       )}
-
-      {location && (
-        <div style={{ marginTop: "1rem" }}>
-          <h3>Lokasi Terdeteksi:</h3>
-          <p>Kota: {location.city}</p>
-          <p>Provinsi: {location.state}</p>
-          <p>Negara: {location.country}</p>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

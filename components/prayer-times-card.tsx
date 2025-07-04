@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Clock, MapPin, RefreshCw } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Clock, MapPin, RefreshCw, Volume2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,37 +9,86 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuranStore } from "@/lib/store";
+import LocationDirection from "./shared/Location";
+import { Button } from "./ui/button";
 import { getPrayerTimes } from "@/lib/prayer-api";
-import type { PrayerTimes } from "@/lib/types";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const subtractMinutes = (
+  timeStr: string,
+  minutesToSubtract: number
+): string => {
+  if (!timeStr || !timeStr.includes(":")) return "";
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  date.setMinutes(date.getMinutes() - minutesToSubtract);
+
+  const newHours = String(date.getHours()).padStart(2, "0");
+  const newMinutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${newHours}:${newMinutes}`;
+};
 
 export function PrayerTimesCard() {
-  const { settings, prayerTimes, setPrayerTimes } = useQuranStore();
+  const { settings, prayerTimes, setPrayerTimes, updateSettings } =
+    useQuranStore();
   const [loading, setLoading] = useState(false);
   const [nextPrayer, setNextPrayer] = useState<{
     name: string;
     time: string;
   } | null>(null);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playedAlarms, setPlayedAlarms] = useState<Set<string>>(new Set());
+
+  const audioOptions = [
+    { value: "adzan.mp3", label: "Adzan (Default)" },
+    { value: "adzan_makkah.mp3", label: "Adzan Makkah" },
+    { value: "notification_simple.mp3", label: "Notifikasi Singkat" },
+    { value: "no_sound.mp3", label: "Tanpa Suara" },
+  ];
+
   const prayerNames = {
-    imsak: "imsak",
-    subuh: "subuh",
-    terbit: "terbit",
-    dhuha: "dhuha",
-    dzuhur: "dzuhur",
-    ashar: "ashar",
-    maghrib: "maghrib",
-    isya: "isya",
+    imsak: "Imsak",
+    subuh: "Subuh",
+    terbit: "Terbit",
+    dhuha: "Dhuha",
+    dzuhur: "Dzuhur",
+    ashar: "Ashar",
+    maghrib: "Maghrib",
+    isya: "Isya",
   };
 
-  const loadPrayerTimes = async () => {
-    setLoading(true);
-    try {
-      const times = await getPrayerTimes("1221");
+  useEffect(() => {
+    const soundFile = settings.alarmSound || "adzan.mp3";
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    audioRef.current = new Audio(`/audio/${soundFile}`);
+    audioRef.current.load();
+  }, [settings.alarmSound]);
 
+  const loadPrayerTimes = async () => {
+    if (!settings.location.id) return;
+    setLoading(true);
+
+    audioRef.current?.play().catch(() => {});
+    audioRef.current?.pause();
+
+    try {
+      const times = await getPrayerTimes(settings.location.id);
       setPrayerTimes(times);
+      setPlayedAlarms(new Set());
     } catch (error) {
       console.error("Failed to load prayer times:", error);
     } finally {
@@ -47,42 +96,82 @@ export function PrayerTimesCard() {
     }
   };
 
-  const findNextPrayer = (times: PrayerTimes) => {
+  const findNextPrayer = () => {
+    if (!prayerTimes) return;
     const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes()
+    ).padStart(2, "0")}`;
 
-    const prayers = [
-      { name: "Subuh", time: times.jadwal.subuh },
-      { name: "Dzuhur", time: times.jadwal.dzuhur },
-      { name: "Ashar", time: times.jadwal.ashar },
-      { name: "Maghrib", time: times.jadwal.maghrib },
-      { name: "Isya", time: times.jadwal.isya },
-    ];
-
-    for (const prayer of prayers) {
-      const [hours, minutes] = prayer.time.split(":").map(Number);
-      const prayerTime = hours * 60 + minutes;
-
-      if (prayerTime > currentTime) {
-        return prayer;
+    const prayerOrder = ["subuh", "dzuhur", "ashar", "maghrib", "isya"];
+    for (const key of prayerOrder) {
+      const prayer = {
+        name: prayerNames[key as keyof typeof prayerNames],
+        time: prayerTimes.jadwal[key as keyof typeof prayerTimes.jadwal],
+      };
+      if (prayer.time > currentTime) {
+        setNextPrayer(prayer);
+        return;
       }
     }
-
-    // If no prayer found today, return tomorrow's Fajr
-    return { name: "Subuh", time: times.jadwal.imsak };
+    setNextPrayer({ name: "Subuh", time: prayerTimes.jadwal.subuh });
   };
 
   useEffect(() => {
-    if (!prayerTimes) {
+    if (!prayerTimes && settings.location.id) {
       loadPrayerTimes();
     }
-  }, []);
+  }, [settings.location.id]);
 
   useEffect(() => {
-    if (prayerTimes) {
-      setNextPrayer(findNextPrayer(prayerTimes));
-    }
+    if (!prayerTimes) return;
+    findNextPrayer();
+    const intervalId = setInterval(findNextPrayer, 60000);
+    return () => clearInterval(intervalId);
   }, [prayerTimes]);
+
+  useEffect(() => {
+    if (!prayerTimes || settings.alarmSound === "no_sound.mp3") return;
+
+    const checkAndPlayAlarm = () => {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+        now.getMinutes()
+      ).padStart(2, "0")}`;
+
+      const prayerOrderForAlarm = [
+        "subuh",
+        "dzuhur",
+        "ashar",
+        "maghrib",
+        "isya",
+      ];
+
+      for (const key of prayerOrderForAlarm) {
+        const prayerName = prayerNames[key as keyof typeof prayerNames];
+        const prayerTime =
+          prayerTimes.jadwal[key as keyof typeof prayerTimes.jadwal];
+
+        const alarmTime = subtractMinutes(prayerTime, 5);
+
+        if (alarmTime === currentTime && !playedAlarms.has(prayerName)) {
+          audioRef.current
+            ?.play()
+            .catch((e) => console.error("Gagal memutar audio:", e));
+          setPlayedAlarms((prev) => new Set(prev).add(prayerName));
+          break;
+        }
+      }
+    };
+
+    const alarmIntervalId = setInterval(checkAndPlayAlarm, 30000);
+
+    return () => clearInterval(alarmIntervalId);
+  }, [prayerTimes, playedAlarms, settings.alarmSound]);
+
+  const handleAudioChange = (newValue: string) => {
+    updateSettings({ alarmSound: newValue });
+  };
 
   if (!prayerTimes) {
     return (
@@ -95,14 +184,7 @@ export function PrayerTimesCard() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <Button onClick={loadPrayerTimes} disabled={loading}>
-              {loading ? (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Clock className="mr-2 h-4 w-4" />
-              )}
-              {loading ? "Memuat..." : "Muat Jadwal Sholat"}
-            </Button>
+            <LocationDirection />
           </div>
         </CardContent>
       </Card>
@@ -118,7 +200,8 @@ export function PrayerTimesCard() {
         </CardTitle>
         <CardDescription className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          {settings.location.city}, {settings.location.country}
+          {settings.location.city},{" "}
+          {settings.location.country?.toLocaleUpperCase()}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -132,6 +215,31 @@ export function PrayerTimesCard() {
             </div>
           </div>
         )}
+
+        <div className="space-y-2 pt-4 border-t">
+          <Label
+            htmlFor="alarm-sound"
+            className="flex items-center gap-2 text-sm font-medium"
+          >
+            <Volume2 className="h-4 w-4" />
+            Suara Alarm (5 Menit Sebelum)
+          </Label>
+          <Select
+            value={settings.alarmSound || "adzan.mp3"}
+            onValueChange={handleAudioChange}
+          >
+            <SelectTrigger id="alarm-sound" className="w-full">
+              <SelectValue placeholder="Pilih suara alarm..." />
+            </SelectTrigger>
+            <SelectContent>
+              {audioOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="grid grid-cols-1 gap-3">
           {Object.entries(prayerNames).map(([key, name]) => (

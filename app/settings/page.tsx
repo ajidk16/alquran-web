@@ -23,6 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useQuranStore } from "@/lib/store";
+import LocationDirection from "@/components/shared/Location";
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useQuranStore();
@@ -41,16 +42,6 @@ export default function SettingsPage() {
     setLocalSettings((prev) => ({
       ...prev,
       [key]: value,
-    }));
-  };
-
-  const updateLocationSettings = (key: string, value: any) => {
-    setLocalSettings((prev) => ({
-      ...prev,
-      location: {
-        ...prev.location,
-        [key]: value,
-      },
     }));
   };
 
@@ -88,59 +79,44 @@ export default function SettingsPage() {
               Pengaturan lokasi untuk jadwal sholat yang akurat
             </CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">Kota</Label>
-                <Input
-                  id="city"
-                  value={localSettings.location.city}
-                  onChange={(e) =>
-                    updateLocationSettings("city", e.target.value)
-                  }
-                  placeholder="Jakarta"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Negara</Label>
-                <Input
-                  id="country"
-                  value={localSettings.location.country}
-                  onChange={(e) =>
-                    updateLocationSettings("country", e.target.value)
-                  }
-                  placeholder="Indonesia"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="prayer-method">Metode Perhitungan Sholat</Label>
-              <Select
-                value={localSettings.prayerMethod.toString()}
-                onValueChange={(value) =>
-                  updateLocalSettings("prayerMethod", Number.parseInt(value))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">
-                    University of Islamic Sciences, Karachi
-                  </SelectItem>
-                  <SelectItem value="2">
-                    Islamic Society of North America
-                  </SelectItem>
-                  <SelectItem value="3">Muslim World League</SelectItem>
-                  <SelectItem value="4">
-                    Umm Al-Qura University, Makkah
-                  </SelectItem>
-                  <SelectItem value="5">
-                    Egyptian General Authority of Survey
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {settings.location.city === "" ? (
+              <LocationDirection />
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Kota</Label>
+                    <Input
+                      disabled
+                      className="!cursor-auto border border-black text-black font-medium"
+                      id="city"
+                      defaultValue={settings.location.city}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">Provinsi</Label>
+                    <Input
+                      disabled
+                      className="!cursor-auto border border-black text-black font-medium"
+                      id="state"
+                      defaultValue={settings.location.state}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Negara</Label>
+                  <Input
+                    disabled
+                    className="!cursor-auto border border-black text-black font-medium"
+                    id="country"
+                    defaultValue={settings.location.country?.toLocaleUpperCase()}
+                  />
+                </div>
+                <div className="space-y-2"></div>
+              </>
+            )}
           </CardContent>
         </Card>
 

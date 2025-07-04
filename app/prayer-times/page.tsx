@@ -1,5 +1,4 @@
 import { PrayerTimesCard } from "@/components/prayer-times-card";
-import LocationButton from "@/components/shared/Location";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
 export default function PrayerTimesPage() {
   return (
     <div className="space-y-8">
-      <LocationButton />
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">Jadwal Sholat</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
