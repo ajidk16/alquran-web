@@ -1,75 +1,88 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Clock, MapPin, RefreshCw } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useQuranStore } from "@/lib/store"
-import { getPrayerTimes } from "@/lib/prayer-api"
-import type { PrayerTimes } from "@/lib/types"
+import { useEffect, useState } from "react";
+import { Clock, MapPin, RefreshCw } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useQuranStore } from "@/lib/store";
+import { getPrayerTimes } from "@/lib/prayer-api";
+import type { PrayerTimes } from "@/lib/types";
 
 export function PrayerTimesCard() {
-  const { settings, prayerTimes, setPrayerTimes } = useQuranStore()
-  const [loading, setLoading] = useState(false)
-  const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string } | null>(null)
+  const { settings, prayerTimes, setPrayerTimes } = useQuranStore();
+  const [loading, setLoading] = useState(false);
+  const [nextPrayer, setNextPrayer] = useState<{
+    name: string;
+    time: string;
+  } | null>(null);
 
   const prayerNames = {
-    Fajr: "Subuh",
-    Dhuhr: "Dzuhur",
-    Asr: "Ashar",
-    Maghrib: "Maghrib",
-    Isha: "Isya",
-  }
+    imsak: "imsak",
+    subuh: "subuh",
+    terbit: "terbit",
+    dhuha: "dhuha",
+    dzuhur: "dzuhur",
+    ashar: "ashar",
+    maghrib: "maghrib",
+    isya: "isya",
+  };
 
   const loadPrayerTimes = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const times = await getPrayerTimes(settings.location.city, settings.location.country, settings.prayerMethod)
-      setPrayerTimes(times)
+      const times = await getPrayerTimes("1221");
+
+      setPrayerTimes(times);
     } catch (error) {
-      console.error("Failed to load prayer times:", error)
+      console.error("Failed to load prayer times:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const findNextPrayer = (times: PrayerTimes) => {
-    const now = new Date()
-    const currentTime = now.getHours() * 60 + now.getMinutes()
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
 
     const prayers = [
-      { name: "Subuh", time: times.timings.Fajr },
-      { name: "Dzuhur", time: times.timings.Dhuhr },
-      { name: "Ashar", time: times.timings.Asr },
-      { name: "Maghrib", time: times.timings.Maghrib },
-      { name: "Isya", time: times.timings.Isha },
-    ]
+      { name: "Subuh", time: times.jadwal.subuh },
+      { name: "Dzuhur", time: times.jadwal.dzuhur },
+      { name: "Ashar", time: times.jadwal.ashar },
+      { name: "Maghrib", time: times.jadwal.maghrib },
+      { name: "Isya", time: times.jadwal.isya },
+    ];
 
     for (const prayer of prayers) {
-      const [hours, minutes] = prayer.time.split(":").map(Number)
-      const prayerTime = hours * 60 + minutes
+      const [hours, minutes] = prayer.time.split(":").map(Number);
+      const prayerTime = hours * 60 + minutes;
 
       if (prayerTime > currentTime) {
-        return prayer
+        return prayer;
       }
     }
 
     // If no prayer found today, return tomorrow's Fajr
-    return { name: "Subuh", time: times.timings.Fajr }
-  }
+    return { name: "Subuh", time: times.jadwal.imsak };
+  };
 
   useEffect(() => {
     if (!prayerTimes) {
-      loadPrayerTimes()
+      loadPrayerTimes();
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (prayerTimes) {
-      setNextPrayer(findNextPrayer(prayerTimes))
+      setNextPrayer(findNextPrayer(prayerTimes));
     }
-  }, [prayerTimes])
+  }, [prayerTimes]);
 
   if (!prayerTimes) {
     return (
@@ -83,13 +96,17 @@ export function PrayerTimesCard() {
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <Button onClick={loadPrayerTimes} disabled={loading}>
-              {loading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Clock className="mr-2 h-4 w-4" />}
+              {loading ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Clock className="mr-2 h-4 w-4" />
+              )}
               {loading ? "Memuat..." : "Muat Jadwal Sholat"}
             </Button>
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -107,7 +124,9 @@ export function PrayerTimesCard() {
       <CardContent className="space-y-4">
         {nextPrayer && (
           <div className="p-4 bg-primary/10 rounded-lg">
-            <div className="text-sm text-muted-foreground">Sholat Selanjutnya</div>
+            <div className="text-sm text-muted-foreground">
+              Sholat Selanjutnya
+            </div>
             <div className="text-lg font-semibold text-primary">
               {nextPrayer.name} - {nextPrayer.time}
             </div>
@@ -116,22 +135,32 @@ export function PrayerTimesCard() {
 
         <div className="grid grid-cols-1 gap-3">
           {Object.entries(prayerNames).map(([key, name]) => (
-            <div key={key} className="flex items-center justify-between py-2 border-b last:border-b-0">
-              <span className="font-medium">{name}</span>
+            <div
+              key={key}
+              className="flex items-center justify-between py-2 border-b last:border-b-0"
+            >
+              <span className="font-medium capitalize">{name}</span>
               <Badge variant="outline" className="font-mono">
-                {prayerTimes.timings[key as keyof typeof prayerTimes.timings]}
+                {prayerTimes.jadwal[key as keyof typeof prayerTimes.jadwal]}
               </Badge>
             </div>
           ))}
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <span className="text-sm text-muted-foreground">{prayerTimes.date}</span>
-          <Button variant="ghost" size="sm" onClick={loadPrayerTimes} disabled={loading}>
+          <span className="text-sm text-muted-foreground">
+            {prayerTimes.jadwal.tanggal}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadPrayerTimes}
+            disabled={loading}
+          >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

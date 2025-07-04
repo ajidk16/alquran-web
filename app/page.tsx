@@ -30,14 +30,14 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-8">
           <Suspense fallback={<SurahListSkeleton />}>
             <SurahListWrapper />
           </Suspense>
         </div>
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <PrayerTimesCard />
-        </div>
+        </div> */}
       </div>
     </div>
   )

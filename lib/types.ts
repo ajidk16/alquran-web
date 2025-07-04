@@ -51,20 +51,24 @@ export interface BookmarkedVerse {
 
 // Add new interfaces for the additional features
 
-export interface PrayerTimes {
+export type Jadwal = {
+  tanggal: string;
+  imsak: string;
+  subuh: string;
+  terbit: string;
+  dhuha: string;
+  dzuhur: string;
+  ashar: string;
+  maghrib: string;
+  isya: string;
   date: string;
-  timings: {
-    Fajr: string;
-    Dhuhr: string;
-    Asr: string;
-    Maghrib: string;
-    Isha: string;
-    Sunrise: string;
-    Sunset: string;
-  };
-  meta: {
-    timezone: string;
-  };
+};
+
+export interface PrayerTimes {
+  id: number;
+  lokasi: string;
+  daerah: string;
+  jadwal: Jadwal;
 }
 
 export interface DailyDua {

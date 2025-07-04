@@ -5,7 +5,7 @@ const BASE_URL = "https://equran.id/api/v2";
 export async function getSurahs(): Promise<Surah[]> {
   try {
     const response = await fetch(`${BASE_URL}/surat`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 },
     });
 
     if (!response.ok) {
@@ -23,7 +23,7 @@ export async function getSurahs(): Promise<Surah[]> {
 export async function getSurahDetail(id: number): Promise<SurahDetail> {
   try {
     const response = await fetch(`${BASE_URL}/surat/${id}`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 },
     });
 
     if (!response.ok) {
@@ -41,7 +41,7 @@ export async function getSurahDetail(id: number): Promise<SurahDetail> {
 export async function getTafsirDetail(id: number): Promise<TafsirDetail> {
   try {
     const response = await fetch(`${BASE_URL}/tafsir/${id}`, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 },
     });
 
     if (!response.ok) {
