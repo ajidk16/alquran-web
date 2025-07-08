@@ -1,15 +1,15 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Amiri } from "next/font/google"
+import { Inter, Amiri_Quran } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from "@/components/header"
 import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
-const amiri = Amiri({
+const amiri = Amiri_Quran({
   subsets: ["arabic"],
-  weight: ["400", "700"],
+  weight: ["400"],
   variable: "--font-amiri",
 })
 
